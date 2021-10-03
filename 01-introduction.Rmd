@@ -1,0 +1,230 @@
+---
+title: "Introduction to R"
+output: 
+    html_notebook:
+        toc: true
+        toc_float: true
+---
+
+This notebook intends to give a very quick introduction to R from a data 
+practitioner's point of view. After going through this introduction, you should
+be able to differentiate R from other programming languages, so that you can
+reason about which tool is best for the job at hand.
+
+# R as a programming language 
+
+## Scripting language 
+
+R is a *scripting language* (as opposed to a *compiled language*). This means
+that R code is written as scripts that are run (interpreted) directly from the 
+code and in the order that the code is written in. R scripts are simply a 
+chronological series of commands.  Other examples of scripting languages are 
+JavaScript and Python.
+
+A compiled language, on the other hand, is first compiled into a binary 
+which is some lower level language. Before you can run something written in a 
+compiled language, you must first compile it. Examples of compiled languages
+are C or C++.
+
+Scripting languages are more popular for data because data work involves a 
+lot of iteration and trial and error.
+
+## Dynamic typing
+
+R is dynamically typed. This means that variables declared in R can be of 
+any type and do not need to be pre-declared. 
+
+```{r}
+# First variable x is a number 
+x <- 2
+# Next variable x is a character string.
+# In other languages, this would cause an error
+x <- "I am a string"
+```
+
+In other languages (and in strict versions of languages such as JS/Python), 
+the type need
+
+Dynamic typing is good for iteration and quick feedback. However, it is usually
+easier to make mistakes and consumes more memory than other languages.
+
+## Everything is a vector
+
+In some programming languages, there are the concept of *scalars* and *vectors*.
+Scalars can only have a length of 1, while vectors are a list of one or more
+characters. In R, everything is a vector. 
+
+```{r}
+# This may look like we are declaring a scalar, but we can just append
+# to it to prove that it is a vector 
+x <- 2L
+x <- c(x, 1L)
+print(x)
+```
+
+Many operations in R are *vectorized*, i.e. it is designed to work on vectors.
+This is important because while most languages emphasize using `for` loops for 
+operating on arrays, R uses vectorized commands and functional constructs
+in the `apply` family of functions or in the `purrr` package.
+
+```{r}
+# Say you have a vector of integers 
+x <- c(1L, 2L, 3L, 4L)
+# You want to add 3 to each element in the vector
+# Non-vectorized (WRONG) way
+for (i in 1:length(x)) {
+    x[i] <- x[i] + 3L
+    print(x)
+}
+# Vectorized way 
+x + 3L
+```
+
+## Object-oriented vs Functional
+
+R is primarily a functional language. This means that it uses functions as its
+main unit of storing information and logic. Something is that used broadly in 
+the R world is the `magrittr` pipe `%>%`, which is very useful for chaining
+together functions that produce your desired transformation. This is very
+consistently used in the `tidyverse` set of packages, where all of the 
+functions usually take a data frame and output another data frame.
+
+```{r}
+library(magrittr)
+add <- function(x, y) {
+    x + y
+}
+# Non piped way of doing things
+x <- 3
+x <- add(x, 5)
+print(x)
+# Piped way of doing things
+x <- 3 
+x %>% 
+    add(5) %>% 
+    add(10) %>% 
+    add(20) %>% 
+    print()
+```
+
+R also has various flavors of Object Oriented Programming, but the one I 
+can recommend as the most suited to Data Science applications is the `R6` 
+class system in the `R6` package.
+
+# R as a computing environment
+
+## The Data Frame 
+
+Whereas most programming languages focus on the primitives (integers, strings,
+booleans, etc), the most central form in the R world is the data frame (or the 
+`tibble` which is a more advanced data frame used in the `tidyverse`.
+
+A data frame can be described as a list of vectors of equal length and named 
+accordingly.
+
+```{r}
+library(tibble)
+example <- as_tibble(iris)
+print(example)
+print(example[[1]])
+print(example["Sepal.Length"])
+print(example["Sepal.Length", 1])
+```
+
+## Forms of R code
+
+R code can take many forms:
+
+* A basic R script that contains commands that you can run. You can use 
+  `source('path/to/R/script')` within R to run an R script. You can also 
+  use `Rscript path/to/R/script` in the command line; which is useful when 
+  running scripts in production or in Docker containers.
+* In an R markdown document or R Notebook that allows you to mix code and prose
+  and be able to "knit" that document into an HTML or other format. This format
+  is ideal for various applications.
+* In an R package where you write functions and other reusable pieces of code.
+  If you are going to write R code for repeated use, it is ideal to use a 
+  package format.
+* Special forms such as a Plumber API or a Shiny app that form the basis of 
+  an application that you can run on a long standing basis to serve customers.
+  This is used when building lasting infrastructure for use on a regular basis.
+
+## Comprehensive R Archive Network (CRAN)
+
+R packages can be created locally and installed locally, but the most popular
+way that people share and consume R packages is through CRAN. CRAN is maintained
+by volunteers and the R Foundation, and they ensure that every package submitted
+to CRAN is tested and that dependencies of packages on each other (also known as 
+reverse dependencies) do not break.
+
+CRAN is a big reason why it is very easy to find, install, and use R packages.
+Because of the reverse dependencies checks, we can upgrade our package versions
+with relative ease and not be scared of changes.
+
+An alternative to CRAN is MRAN (Microsoft), which allows us to snapshot packages
+at a particular point in time, so that our dependencies don't break over time. 
+MRAN is used in `rocker` Docker images because they allow us to freeze 
+package versions at a certain point in time
+
+## The Tidyverse set of packages 
+
+The tidyverse is a set of packages that work well with each other. It is also
+a package in itself.
+
+```{r}
+library(tidyverse)
+```
+
+The most important packages in the tidyverse are:
+
+* `readr` - Reading and writing from flat files 
+* `tidyr` - Tidying your data into a tidy format 
+* `purrr` - Functional programming in R 
+* `dplyr` - Bread and butter data frame manipulation
+* `ggplot2` - Visualization using the grammar of graphics
+* `stringr` - For text manipulation
+
+Knowing just all 6 of these packages by heart will allow you to cover a vast 
+majority of data analysis use cases.
+
+# R code workflow and organization tips
+
+## The Tidy Data Science Process
+
+![Tidy Data Science Process](https://d33wubrfki0l68.cloudfront.net/795c039ba2520455d833b4034befc8cf360a70ba/558a5/diagrams/data-science-explore.png)
+
+## Pointers
+
+* **Use R projects!** It is important, especially as you use version control,
+  that you always encapsulate your work in an R project. This ensures that your
+  working directory is always in the same place, and that you can easily 
+  do git commands within Rstudio.
+* **Code is real, data is not** You usually do _not_ commit data files into your 
+  version control, but rather, your scripts should always have the ability to 
+  regenerate whatever data manipulations you have done. This means that if 
+  you have data, you usually do not modify that data in place and record any 
+  modifications you have made to that data in R scripts.
+* **Do not repeat yourself**. If you copy and paste a piece of code, use a 
+  function. If you copy and paste a function, write a package.
+* **Don't reinvent the wheel**. There will almost always be a package that makes
+  whatever task you want to do a lot easier. Do your research before deciding
+  to write code. 
+
+## Workflow Packages 
+
+* `usethis` and `devtools` - for package development 
+* `golem` - for shiny app development 
+* `here`  - for working directory management 
+* `drake` - for caching and managing analytic projects 
+
+# R resources 
+
+* Hands down the best book for learning R for Data Science is 
+  [R for Data Science](https://r4ds.had.co.nz/index.html). It is available for 
+  free at this link.
+* Use [RSeek](https://rseek.org/) when searching for anything R related, because
+  R as a letter is hard to search.
+* Subscribe to [R weekly](http://rweekly.org/) for a weekly newsletter on the 
+  latest and greatest in R. 
+* [RStudio's resources page](http://resources.rstudio.com/) are among the best 
+  places to find even more resources about R.

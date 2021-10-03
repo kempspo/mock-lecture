@@ -1,0 +1,119 @@
+---
+title: "Data Visualization"
+author: "Kemp Po"
+output: 
+    html_document
+---
+
+``` {r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Intro {.sidebar}
+
+This dashboard will cover several topics:
+
+- Reading csv files and manipulating data on R
+- Plotting using the `ggplot2` package
+
+> At this point in time, use tidyverse packages
+Tidyverse includes the usual analytics packages like `ggplot2`, `dplyr`,
+`readr`, and many other packages that make our lives easier.
+
+# Importing Data
+
+## Flat files
+
+### Write a text file 
+```{r}
+read_csv("data/country vaccinations.csv", n_max = 2L)
+```
+
+### Comma Separated Values
+```{r}
+library(readr)
+write_csv(iris, "data/iris.csv")
+read_csv("data/iris.csv")
+```
+
+### Excel Files 
+```{r}
+library(readxl)
+readxl::read_excel
+```
+
+## Databases (DBI)
+```{r eval = FALSE}
+library(DBI)
+library(RPostgres)
+
+dwh_conn <- db_connect(
+    drv = Postgres(),
+    host = Sys.getenv("DWH_HOST"),
+    user = Sys.getenv("DWH_USER"),
+    pass = Sys.getenv("DWH_PASS"),
+    port = 5432,
+    dbname = Sys.getenv("DWH_NAME")
+)
+
+dbGetQuery(
+    conn = dwh_conn,
+    statement = "SELECT * FROM dim_client limit 10"
+)
+
+dbExistsTable(
+    conn = dwh_conn@con,
+    name = "fact_trade_underwriting"
+)
+
+dbReadTable(
+    conn = dwh_conn,
+    name = "fact_fx_rate"
+)
+
+dbListTables(
+    conn = dwh_conn
+)
+
+library(dbx)
+library(tibble)
+
+dbDisconnect(
+    conn = dwh_conn
+)
+```
+
+### Databases (ORM)
+```{r eval = FALSE}
+library(dbplyr)
+library(dplyr)
+
+tbl(dwh_conn, "dim_client") %>% 
+    select(revenue_estimate) %>% 
+    filter(is.na(revenue_estimate)) %>% 
+    collect(n = Inf) 
+```
+
+## Web APIs
+```{r}
+library(httr)
+library(dplyr)
+library(jsonlite)
+
+GET(
+    url = "http://api.exchangeratesapi.io/v1/",
+    path = "latest",
+    query = list(access_key = Sys.getenv("FX_API_KEY"))
+) %>% 
+    stop_for_status() %>% 
+    content(as = "parsed") ->
+    response
+
+response[[1]]
+```
+
+
+## Google Sheets 
+
+# Data manipulation on R 
