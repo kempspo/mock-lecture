@@ -1,9 +1,12 @@
 ---
 title: "Introduction to R"
-output: 
-    html_notebook:
-        toc: true
-        toc_float: true
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
 ---
 
 This notebook intends to give a very quick introduction to R from a data 

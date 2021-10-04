@@ -2,48 +2,57 @@
 title: "Data Visualization"
 author: "Kemp Po"
 output: 
-    html_document
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
 ---
 
-``` {r setup, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-# Intro {.sidebar}
+# Intro
 
-This dashboard will cover several topics:
+This dashboard will cover several topics on R:
 
-- Reading csv files and manipulating data on R
-- Plotting using the `ggplot2` package
+-   Reading data
+-   Manipulating data
+-   Creating visualizations using the `ggplot2` package
 
-> At this point in time, use tidyverse packages
-Tidyverse includes the usual analytics packages like `ggplot2`, `dplyr`,
-`readr`, and many other packages that make our lives easier.
+> At this point in time, use tidyverse packages Tidyverse includes the usual analytics packages like `ggplot2`, `dplyr`, `readr`, and many other packages that make our lives easier.
 
 # Importing Data
 
 ## Flat files
 
-### Write a text file 
-```{r}
-read_csv("data/country vaccinations.csv", n_max = 2L)
+### Text File
+
+``` {r echo = TRUE}
+write_lines("Hello World", "data/example.txt")
+read_lines("data/example.txt")
 ```
 
 ### Comma Separated Values
-```{r}
+
+```{r echo = TRUE}
 library(readr)
 write_csv(iris, "data/iris.csv")
-read_csv("data/iris.csv")
+read_csv("data/iris.csv", show_col_types = FALSE)
 ```
 
-### Excel Files 
-```{r}
+### Excel Files
+
+```{r eval = FALSE}
 library(readxl)
 readxl::read_excel
 ```
 
 ## Databases (DBI)
+
 ```{r eval = FALSE}
 library(DBI)
 library(RPostgres)
@@ -85,6 +94,7 @@ dbDisconnect(
 ```
 
 ### Databases (ORM)
+
 ```{r eval = FALSE}
 library(dbplyr)
 library(dplyr)
@@ -96,7 +106,8 @@ tbl(dwh_conn, "dim_client") %>%
 ```
 
 ## Web APIs
-```{r}
+
+```{r echo=TRUE}
 library(httr)
 library(dplyr)
 library(jsonlite)
@@ -110,10 +121,22 @@ GET(
     content(as = "parsed") ->
     response
 
-response[[1]]
+response$rates$USD
 ```
 
+## Google Sheets
 
-## Google Sheets 
+# Data manipulation
 
-# Data manipulation on R 
+```{r echo = TRUE}
+data <- read_csv("data/country vaccinations.csv", show_col_types = FALSE)
+
+data %>% 
+  filter(country == "Philippines")
+```
+
+```{r echo = TRUE}
+
+```
+
+# Visualization
