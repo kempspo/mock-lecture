@@ -15,28 +15,28 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-# Intro
+# *Intro*
 
-This dashboard will cover several topics on R:
+*This dashboard will cover several topics on R:*
 
--   Reading data
--   Manipulating data
--   Creating visualizations using the `ggplot2` package
+-   *Reading data*
+-   *Manipulating data*
+-   *Creating visualizations using the `ggplot2` package*
 
-> At this point in time, use tidyverse packages Tidyverse includes the usual analytics packages like `ggplot2`, `dplyr`, `readr`, and many other packages that make our lives easier.
+> *At this point in time, use tidyverse packages Tidyverse includes the usual analytics packages like `ggplot2`, `dplyr`, `readr`, and many other packages that make our lives easier.*
 
-# Importing Data
+# *Importing Data*
 
-## Flat files
+## *Flat files*
 
-### Text File
+### *Text File*
 
-``` {r echo = TRUE}
+```{r echo = TRUE}
 write_lines("Hello World", "data/example.txt")
 read_lines("data/example.txt")
 ```
 
-### Comma Separated Values
+### *Comma Separated Values*
 
 ```{r echo = TRUE}
 library(readr)
@@ -44,68 +44,68 @@ write_csv(iris, "data/iris.csv")
 read_csv("data/iris.csv", show_col_types = FALSE)
 ```
 
-### Excel Files
+### *Excel Files*
 
 ```{r eval = FALSE}
 library(readxl)
 readxl::read_excel
 ```
 
-## Databases (DBI)
+## *Databases (DBI)*
 
 ```{r eval = FALSE}
 library(DBI)
 library(RPostgres)
 
 dwh_conn <- db_connect(
-    drv = Postgres(),
-    host = Sys.getenv("DWH_HOST"),
-    user = Sys.getenv("DWH_USER"),
-    pass = Sys.getenv("DWH_PASS"),
-    port = 5432,
-    dbname = Sys.getenv("DWH_NAME")
+  drv = Postgres(),
+  host = Sys.getenv("DWH_HOST"),
+  user = Sys.getenv("DWH_USER"),
+  pass = Sys.getenv("DWH_PASS"),
+  port = 5432,
+  dbname = Sys.getenv("DWH_NAME")
 )
 
 dbGetQuery(
-    conn = dwh_conn,
-    statement = "SELECT * FROM dim_client limit 10"
+  conn = dwh_conn,
+  statement = "SELECT * FROM dim_client limit 10"
 )
 
 dbExistsTable(
-    conn = dwh_conn@con,
-    name = "fact_trade_underwriting"
+  conn = dwh_conn@con,
+  name = "fact_trade_underwriting"
 )
 
 dbReadTable(
-    conn = dwh_conn,
-    name = "fact_fx_rate"
+  conn = dwh_conn,
+  name = "fact_fx_rate"
 )
 
 dbListTables(
-    conn = dwh_conn
+  conn = dwh_conn
 )
 
 library(dbx)
 library(tibble)
 
 dbDisconnect(
-    conn = dwh_conn
+  conn = dwh_conn
 )
 ```
 
-### Databases (ORM)
+### *Databases (ORM)*
 
 ```{r eval = FALSE}
 library(dbplyr)
 library(dplyr)
 
 tbl(dwh_conn, "dim_client") %>% 
-    select(revenue_estimate) %>% 
-    filter(is.na(revenue_estimate)) %>% 
-    collect(n = Inf) 
+  select(revenue_estimate) %>% 
+  filter(is.na(revenue_estimate)) %>% 
+  collect(n = Inf) 
 ```
 
-## Web APIs
+## *Web APIs*
 
 ```{r echo=TRUE}
 library(httr)
@@ -113,30 +113,138 @@ library(dplyr)
 library(jsonlite)
 
 GET(
-    url = "http://api.exchangeratesapi.io/v1/",
-    path = "latest",
-    query = list(access_key = Sys.getenv("FX_API_KEY"))
+  url = "http://api.exchangeratesapi.io/v1/",
+  path = "latest",
+  query = list(access_key = Sys.getenv("FX_API_KEY"))
 ) %>% 
-    stop_for_status() %>% 
-    content(as = "parsed") ->
-    response
+  stop_for_status() %>% 
+  content(as = "parsed") ->
+  response
 
 response$rates$USD
 ```
 
-## Google Sheets
+## *Google Sheets*
 
-# Data manipulation
+# *Data manipulation*
+
+*Let's take a look at our data*
 
 ```{r echo = TRUE}
 data <- read_csv("data/country vaccinations.csv", show_col_types = FALSE)
 
-data %>% 
+ph_data <- 
+  data %>% 
   filter(country == "Philippines")
+
+ph_data %>% head(10)
 ```
+
+*I'm seeing a lot of NAs. Let's turn them into 0s instead so we can properly visualize them later. Although, 0 != NA logically.*
 
 ```{r echo = TRUE}
+# replace NA value with 0 
+ph_data %>% 
+replace(is.na(.), 0)
 
+# there's other ways of doing this such as
+ph_data %>% 
+  mutate(total_vaccinations = replace_na(total_vaccinations, 0))
 ```
 
-# Visualization
+> Caveat: there are different scenarios for doing this one-by-one vs programmatically. Know your data first and figure out what type of strategy you would employ.
+
+```{r}
+# just dropping things i don't really wanna know for now
+
+# we can select columns in multiple ways
+ph_data %>% 
+  select(date)
+
+# and its inverse using - 
+ph_data <- 
+  ph_data %>% 
+  select(
+    -source_website,
+    -source_name
+  )
+```
+
+
+# *Visualization*
+
+## Key Principles:
+
+### Audience Centric
+
+-   The first step to visualizing your data will always be answering the question "What story am I trying to tell?" and "who am I talking to?"
+
+-   These questions inform us of how to structure our visualizations and what the right level of information is
+    Ex. most of the time company-level metrics don't need granular information
+
+### KISS (Keep it simple, stupid)
+
+-   A very important design principle, also for software.
+
+-   Make it easy to understand. Simple = More. The point of visualizations is to make the information as easily digestible as possible.
+
+### Use the right charts
+
+-   Choose the graph based on the kind of data and the message
+
+-   Different types of graphs convey certain types of information better
+    Ex. line charts are better for showing trends over time than bar graphs
+
+-   *Don't* forget to label your charts properly 
+
+### Resources
+
+-   [The laws of shitty dashboards](https://www.bears-repeating.com/the-laws-of-shitty-dashboards) put in a very light-hearted manner how *not* to build dashboards and something to always take note of.
+
+-   [TJ Palanca: On Data Visualization Design](https://tjpalanca.com/posts/2017-02-05-wiad-2016-talk/)
+
+## Let's give it a try
+
+### Vaccinations over time
+
+```{r}
+options(scipen=999)
+
+ph_data %>%
+  arrange(date) %>%
+  fill(people_vaccinated) %>% 
+  ggplot(aes(x=date, y=people_vaccinated)) +
+  geom_line() + 
+  xlab("")
+```
+### How is the Philippines faring compared to the rest of ASEAN? 
+```{r fig.width = 10}
+data %>%
+  filter(
+    country %in% c("Philippines", "Indonesia", "Malaysia", "Singapore", "Thailand")
+  ) %>% 
+  fill(people_vaccinated) %>% 
+  ggplot(aes(x=date, y=people_vaccinated, group=country, color=country)) +
+  geom_line() + 
+  scale_x_date(date_breaks = "months", date_labels = "%B")
+  ggtitle("Total Vaccinations Over Time per Country")
+```
+
+Now you may think, wow the Philippines isn't doing that bad according to this graph. 
+But you have to remember these are raw numbers. The Philippines has almost 20x the population of Singapore.
+
+So what do we look at instead? Luckily, we have a column for this already `people_fully_vaccinated_per_hundred` tells a much more
+holistic story of what we're actually experiencing.
+
+```{r fig.width = 10}
+data %>%
+  filter(
+    country %in% c("Philippines", "Indonesia", "Malaysia", "Singapore", "Thailand")
+  ) %>% 
+  fill(people_vaccinated_per_hundred) %>% 
+  ggplot(aes(x=date, y=people_vaccinated_per_hundred, group=country, color=country)) +
+  geom_line() + 
+  scale_x_date(date_breaks = "months", date_labels = "%B") +
+  ggtitle("Vaccinations Per Hundred People Over Time per Country")
+```
+
